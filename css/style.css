@@ -1,0 +1,12 @@
+.produto-container {
+    margin-bottom: 10px;
+}
+
+.remover-produto {
+    background-color: #ff6b6b;
+    margin-top: 10px;
+}
+
+.remover-produto:hover {
+     background-color: #ff5252;
+}

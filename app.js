@@ -144,11 +144,35 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${dataFormatada}</td>
           <td>${pedido.formaPagamento}</td>
           <td>R$ ${pedido.total}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="apagarPedido('${childSnapshot.key}')">Excluir</button>
+          </td>
         `;
         tabelaPedidos.appendChild(linha);
       });
     });
   }
 
+
   carregarPedidos();
 });
+function apagarPedido(id) {
+  if (confirm("Tem certeza que deseja excluir este pedido?")) {
+    pedidosRef.child(id).remove()
+      .then(() => {
+        alert("Pedido excluído com sucesso!");
+        // Recarrega os pedidos atualizados
+        document.getElementById('tabelaPedidos').innerHTML = '';
+        pedidosRef.once('value', snapshot => {
+          document.querySelectorAll('tbody tr').forEach(e => e.remove());
+          document.addEventListener('DOMContentLoaded', () => carregarPedidos());
+        });
+        location.reload(); // mais simples
+      })
+      .catch(error => {
+        console.error("Erro ao excluir pedido:", error);
+        alert("Erro ao excluir o pedido.");
+      });
+  }
+}
+

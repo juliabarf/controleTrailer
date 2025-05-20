@@ -120,42 +120,137 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 
-  function carregarPedidos() {
-    const tabelaPedidos = document.getElementById('tabelaPedidos');
-    tabelaPedidos.innerHTML = '';
+function carregarPedidos() {
+  const tabelaPedidos = document.getElementById('tabelaPedidos');
+  tabelaPedidos.innerHTML = '';
 
-    pedidosRef.orderByChild('data').once('value', snapshot => {
-      if (!snapshot.exists()) {
-        tabelaPedidos.innerHTML = '<tr><td colspan="5">Nenhum pedido encontrado</td></tr>';
-        return;
-      }
+  pedidosRef.orderByChild('data').limitToLast(5).once('value', snapshot => {
+    if (!snapshot.exists()) {
+      tabelaPedidos.innerHTML = '<tr><td colspan="6">Nenhum pedido encontrado</td></tr>';
+      return;
+    }
 
-      snapshot.forEach(childSnapshot => {
-        const pedido = childSnapshot.val();
-        const dataFormatada = new Date(pedido.data).toLocaleString('pt-BR');
+    const pedidos = [];
+    snapshot.forEach(childSnapshot => {
+      pedidos.push({
+        key: childSnapshot.key,
+        ...childSnapshot.val()
+      });
+    });
+
+    // Inverter a ordem para mostrar do mais recente para o mais antigo
+    pedidos.reverse();
+
+    pedidos.forEach(pedido => {
+      const dataFormatada = new Date(pedido.data).toLocaleString('pt-BR');
+      const produtosStr = pedido.produtos.map(p =>
+        `${p.quantidade}x ${p.nome} (R$ ${parseFloat(p.preco).toFixed(2)})`
+      ).join(', ');
+
+      const linha = document.createElement('tr');
+      linha.innerHTML = `
+        <td>${pedido.numero}</td>
+        <td>${produtosStr}</td>
+        <td>${dataFormatada}</td>
+        <td>${pedido.formaPagamento}</td>
+        <td>R$ ${pedido.total}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="apagarPedido('${pedido.key}')">Excluir</button>
+        </td>
+      `;
+      tabelaPedidos.appendChild(linha);
+    });
+  });
+}
+
+carregarPedidos();
+
+});
+function baixarRelatorioFiltrado() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const mesSelecionado = document.getElementById('mes').value;
+  const anoSelecionado = document.getElementById('ano').value;
+
+  pedidosRef.orderByChild('data').once('value', snapshot => {
+    if (!snapshot.exists()) {
+      alert('Nenhum pedido encontrado.');
+      return;
+    }
+
+    const dadosTabela = [];
+    let totalVendas = 0;
+
+    snapshot.forEach(childSnapshot => {
+      const pedido = childSnapshot.val();
+      const dataPedido = new Date(pedido.data);
+
+      const mes = dataPedido.getMonth(); // 0 a 11
+      const ano = dataPedido.getFullYear();
+
+      const filtroMes = mesSelecionado === "" || parseInt(mesSelecionado) === mes;
+      const filtroAno = anoSelecionado === "" || parseInt(anoSelecionado) === ano;
+
+      if (filtroMes && filtroAno) {
+        const dataFormatada = dataPedido.toLocaleString('pt-BR');
         const produtosStr = pedido.produtos.map(p =>
           `${p.quantidade}x ${p.nome} (R$ ${parseFloat(p.preco).toFixed(2)})`
         ).join(', ');
 
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${pedido.numero}</td>
-          <td>${produtosStr}</td>
-          <td>${dataFormatada}</td>
-          <td>${pedido.formaPagamento}</td>
-          <td>R$ ${pedido.total}</td>
-          <td>
-            <button class="btn btn-danger btn-sm" onclick="apagarPedido('${childSnapshot.key}')">Excluir</button>
-          </td>
-        `;
-        tabelaPedidos.appendChild(linha);
-      });
+        const total = parseFloat(pedido.total);
+        totalVendas += total;
+
+        dadosTabela.push([
+          pedido.numero,
+          produtosStr,
+          dataFormatada,
+          pedido.formaPagamento,
+          `R$ ${total.toFixed(2)}`
+        ]);
+      }
     });
-  }
 
+    if (dadosTabela.length === 0) {
+      alert('Nenhum pedido encontrado com os filtros selecionados.');
+      return;
+    }
 
-  carregarPedidos();
-});
+    // Cabeçalhos
+    const colunas = ['Pedido Nº', 'Produtos', 'Data', 'Pagamento', 'Total'];
+
+    // Título
+    doc.setFontSize(16);
+    doc.text('Relatório Filtrado de Vendas', 14, 15);
+
+    // Tabela
+    doc.autoTable({
+      head: [colunas],
+      body: dadosTabela,
+      startY: 25,
+      styles: { fontSize: 9, cellWidth: 'wrap' },
+      headStyles: { fillColor: [0, 123, 255] },
+      columnStyles: {
+        1: { cellWidth: 70 }, // Produtos
+        2: { cellWidth: 30 }, // Data
+        3: { cellWidth: 30 }, // Pagamento
+      }
+    });
+
+    // Soma total no final
+    const posY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text(`Total de vendas no período: R$ ${totalVendas.toFixed(2)}`, 14, posY);
+
+    // Rodapé
+    const rodape = 'Relatório gerado em: ' + new Date().toLocaleString('pt-BR');
+    doc.setFontSize(9);
+    doc.text(rodape, 14, doc.internal.pageSize.height - 10);
+
+    doc.save('relatorio-filtrado.pdf');
+  });
+}
+
 function apagarPedido(id) {
   if (confirm("Tem certeza que deseja excluir este pedido?")) {
     pedidosRef.child(id).remove()

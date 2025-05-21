@@ -1,11 +1,11 @@
  Controle Trailer
 
 Sistema web desenvolvido para otimizar a logística de vendas em comércios. Permite o gerenciamento eficiente de pedidos e controle de estoque.
-📋 Funcionalidades
 
+📋 Funcionalidades
 Registro e acompanhamento de pedidos
 Controle de estoque de produtos
-    Relatórios de vendas e desempenho
+Relatórios de vendas e desempenho
 
 🛠️ Tecnologias Utilizadas
 

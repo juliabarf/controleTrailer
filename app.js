@@ -35,9 +35,31 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="select-wrapper">
           <select class="form-control produto-select" name="produto[]" required>
             <option value="" disabled selected>Escolha uma opção...</option>
-            <option value="Sopa(P)">Sopa Pequena (P)</option>
-            <option value="Sopa(M)">Sopa Média (M)</option>
-            <option value="Sopa(G)">Sopa Grande (G)</option>
+                <optgroup label="Café da Manhã">
+                    <option value="café puro">Café Puro</option>
+                    <option value="café c/ leite">Café c/ Leite</option>
+                    <option value="chocolate">Chocolate</option>
+                    <option value="suco natural">Suco Natural</option>
+                    <option value="bolo">Bolo</option>
+                    <option value="misto">Misto</option>
+                    <option value="pão c/ ovo">Pão c/ Ovo</option>
+                    <option value="pão na chapa">Pão na Chapa</option>
+                </optgroup>
+                <optgroup label="Sopas e outros">
+                    <option value="Sopa(P)">Sopa(P)</option>
+                    <option value="Sopa(M)">Sopa(M)</option>
+                    <option value="Sopa(G)">Sopa(G)</option>
+                    <option value="batata">Batata</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="empadão">Empadão</option>
+                    <option value="pizza">Pizza</option>
+                </optgroup>
+                <optgroup label="Bebidas">
+                    <option value="água">Água</option>
+                    <option value="cerveja">Cerveja</option>
+                    <option value="refrgerante">Refrigerante</option>
+                    <option value="guaravita">Guaravita</option>
+                </optgroup>
           </select>
           <div class="select-arrow"></div>
         </div>
